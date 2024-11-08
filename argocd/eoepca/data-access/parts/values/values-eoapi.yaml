@@ -5,6 +5,15 @@ ingress:
     kubernetes.io/ingress.class: nginx
     ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/configuration-snippet:
+      location ~ ^/stac/ {
+        limit_except GET {
+          auth_basic "Authentication Required";
+          auth_basic_user_file /etc/nginx/secrets/basic-auth;
+        }
+      }
+    nginx.ingress.kubernetes.io/auth-secret: basic-auth
+    nginx.ingress.kubernetes.io/auth-type: basic
     cert-manager.io/cluster-issuer: letsencrypt-prod
   host: eoapi.develop.eoepca.org
   tls:
@@ -34,7 +43,7 @@ postgrescluster:
   backupsStorageClassName: managed-nfs-storage-retain
   nfsCustom:  # we added a manual option to our postgresql chart to try and accommodate this b/c it was hardcoded as ReadWriteOnce: https://github.com/developmentseed/eoapi-k8s/pull/147
       - name: repo1
-    
+
 pgstacBootstrap:
   enabled: true
   settings:
@@ -58,7 +67,7 @@ stac:
   enabled: true
   settings:
     envVars:
-      ENABLED_EXTENSIONS: "query,sort,fields,pagination,filter"
+      ENABLED_EXTENSIONS: "query,sort,fields,pagination,filter,transaction"
     resources:
       limits:
         cpu: "1280m"
